@@ -101,11 +101,25 @@ func (r *Resp) readBulk() (Value, error) {
 	if err != nil {
 		return v, err
 	}
+	if length == -1 {
+		v.Typ = "null"
+		return v, nil
+	}
+	if length < 0 {
+		return v, fmt.Errorf("invalid bulk length: %d", length)
+	}
 	bulk := make([]byte, length)
-	r.reader.Read(bulk)
+	// ensure we read exactly 'length' bytes
+	if _, err := io.ReadFull(r.reader, bulk); err != nil {
+		return v, fmt.Errorf("failed to read bulk data: %w", err)
+	}
+	// r.reader.Read(bulk)
 	v.Bulk = string(bulk)
 	// read trailing CLRF
-	r.readLine()
+	if _, _, err := r.readLine(); err != nil {
+		return v, err
+	}
+
 	return v, nil
 }
 
@@ -155,7 +169,7 @@ func (v Value) marshalArray() []byte {
 		bytes = append(bytes, elem.Marshal()...)
 	}
 
-	return []byte{}
+	return bytes
 }
 
 func (v Value) marshalError() []byte {
