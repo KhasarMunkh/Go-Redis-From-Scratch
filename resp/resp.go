@@ -189,7 +189,7 @@ func (v Value) marshalError() []byte {
 func (v Value) marshalInt() []byte {
 	var bytes []byte
 	bytes = append(bytes, INT)
-	bytes = strconv.AppendInt(bytes, int64(v.Num), 64)
+	bytes = strconv.AppendInt(bytes, int64(v.Num), 10)
 	bytes = append(bytes, '\r', '\n')
 	return bytes
 }
