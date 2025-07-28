@@ -135,27 +135,11 @@ func (v Value) Marshal() []byte {
 		return v.marshalNull()
 	case "error":
 		return v.marshalError()
+	case "int":
+		return v.marshalInt()
 	default:
 		return []byte{}
 	}
-}
-
-func (v Value) marshalString() []byte {
-	var bytes []byte
-	bytes = append(bytes, STRING)
-	bytes = append(bytes, v.Str...)
-	bytes = append(bytes, '\r', '\n')
-	return bytes
-}
-
-func (v Value) marshalBulk() []byte {
-	var bytes []byte
-	bytes = append(bytes, BULK)
-	bytes = strconv.AppendInt(bytes, int64(len(v.Bulk)), 10)
-	bytes = append(bytes, '\r', '\n')
-	bytes = append(bytes, v.Bulk...)
-	bytes = append(bytes, '\r', '\n')
-	return bytes
 }
 
 // recursive marshal for array
@@ -172,6 +156,28 @@ func (v Value) marshalArray() []byte {
 	return bytes
 }
 
+func (v Value) marshalBulk() []byte {
+	var bytes []byte
+	bytes = append(bytes, BULK)
+	bytes = strconv.AppendInt(bytes, int64(len(v.Bulk)), 10)
+	bytes = append(bytes, '\r', '\n')
+	bytes = append(bytes, v.Bulk...)
+	bytes = append(bytes, '\r', '\n')
+	return bytes
+}
+
+func (v Value) marshalString() []byte {
+	var bytes []byte
+	bytes = append(bytes, STRING)
+	bytes = append(bytes, v.Str...)
+	bytes = append(bytes, '\r', '\n')
+	return bytes
+}
+
+func (v Value) marshalNull() []byte {
+	return []byte("$-1\r\n")
+}
+
 func (v Value) marshalError() []byte {
 	var bytes []byte
 	bytes = append(bytes, ERROR)
@@ -180,8 +186,12 @@ func (v Value) marshalError() []byte {
 	return bytes
 }
 
-func (v Value) marshalNull() []byte {
-	return []byte("$-1\r\n")
+func (v Value) marshalInt() []byte {
+	var bytes []byte
+	bytes = append(bytes, INT)
+	bytes = strconv.AppendInt(bytes, int64(v.Num), 64)
+	bytes = append(bytes, '\r', '\n')
+	return bytes
 }
 
 type Writer struct {
